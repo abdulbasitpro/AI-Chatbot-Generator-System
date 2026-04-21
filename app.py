@@ -96,6 +96,6 @@ with col_f3:
 st.markdown("""
 <div style="text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); color: var(--text-secondary); font-size: 0.9rem;">
     <p>Project: AI Chatbot Generator System</p>
-    <p>Student: [Your Name] | Trainer: Faiza Ghaffar</p>
+    <p>Student: Abdul Basit | Trainer: Faiza Ghaffar</p>
 </div>
 """, unsafe_allow_html=True)
