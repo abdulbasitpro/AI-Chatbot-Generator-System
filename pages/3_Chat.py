@@ -4,43 +4,10 @@ from components.sidebar import render_sidebar
 from utils.storage import load_chatbots
 from utils.groq_client import stream_chat_response, get_available_models
 
-def get_design_system_css():
-    return """
-<style>
-/* Dark theme matching Stitch design tokens */
-:root {
-    --bg-primary: #0A0E1A;
-    --bg-secondary: #111827;
-    --bg-surface: #1E2433;
-    --accent: #6366F1;
-    --accent-hover: #4F46E5;
-    --text-primary: #F1F5F9;
-    --text-secondary: #94A3B8;
-    --border: #1E2D45;
-    --radius: 12px;
-    --font: 'Inter', sans-serif;
-}
-.stApp { background: var(--bg-primary) !important; color: var(--text-primary) !important; }
-.stAppHeader { background: transparent !important; }
-.stChatMessage { background: var(--bg-surface) !important; border-radius: var(--radius) !important; border: 1px solid var(--border); }
-.stTextInput input, .stTextArea textarea, .stSelectbox select {
-    background: var(--bg-secondary) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text-primary) !important;
-    border-radius: 8px !important;
-}
-button[kind="primary"] {
-    background: var(--accent) !important;
-    border: none !important;
-    border-radius: 8px !important;
-    color: white !important;
-}
-.chat-meta { font-size: 0.75rem; color: var(--text-secondary); margin-top: 5px; }
-</style>
-"""
+from components.styles import get_saas_css
 
 st.set_page_config(page_title="Chat | AI Chatbot Generator", page_icon="💬", layout="wide")
-st.markdown(get_design_system_css(), unsafe_allow_html=True)
+st.markdown(get_saas_css(), unsafe_allow_html=True)
 render_sidebar()
 
 bot_id = st.session_state.get("selected_bot_id") or st.query_params.get("bot_id", None)

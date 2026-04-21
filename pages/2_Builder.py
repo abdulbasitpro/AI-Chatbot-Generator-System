@@ -5,41 +5,10 @@ from components.chat_ui import render_chat_preview
 from utils.storage import save_chatbot, load_chatbots
 from utils.groq_client import get_available_models
 
-def get_design_system_css():
-    return """
-<style>
-/* Dark theme matching Stitch design tokens */
-:root {
-    --bg-primary: #0A0E1A;
-    --bg-secondary: #111827;
-    --bg-surface: #1E2433;
-    --accent: #6366F1;
-    --accent-hover: #4F46E5;
-    --text-primary: #F1F5F9;
-    --text-secondary: #94A3B8;
-    --border: #1E2D45;
-    --radius: 12px;
-    --font: 'Inter', sans-serif;
-}
-.stApp { background: var(--bg-primary) !important; color: var(--text-primary) !important; }
-.stAppHeader { background: transparent !important; }
-.stTextInput input, .stTextArea textarea, .stSelectbox select {
-    background: var(--bg-secondary) !important;
-    border: 1px solid var(--border) !important;
-    color: var(--text-primary) !important;
-    border-radius: 8px !important;
-}
-button[kind="primary"] {
-    background: var(--accent) !important;
-    border: none !important;
-    border-radius: 8px !important;
-    color: white !important;
-}
-</style>
-"""
+from components.styles import get_saas_css
 
 st.set_page_config(page_title="Builder | AI Chatbot Generator", page_icon="🛠️", layout="wide")
-st.markdown(get_design_system_css(), unsafe_allow_html=True)
+st.markdown(get_saas_css(), unsafe_allow_html=True)
 render_sidebar()
 
 st.markdown('<h2 style="color: var(--text-primary); font-family: var(--font);">🛠️ Bot Builder</h2>', unsafe_allow_html=True)
