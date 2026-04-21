@@ -143,5 +143,52 @@ button[kind="primary"]:hover {
     100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.4); }
 }
 
+/* --- SIDEBAR SAAS OVERHAUL --- */
+[data-testid="stSidebar"] {
+    background-color: #03050a !important; 
+    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-testid="stSidebarNav"] {
+    padding-top: 1.5rem !important;
+}
+
+[data-testid="stSidebarNav"]::before {
+    content: "✦ AI PLATFORM";
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--accent);
+    padding: 0 1.5rem 1rem 1.5rem;
+    display: block;
+    letter-spacing: 1.5px;
+}
+
+/* Nav Links */
+[data-testid="stSidebarNav"] a {
+    border-radius: 8px !important;
+    margin: 0.2rem 1rem !important;
+    transition: all 0.2s ease !important;
+    font-weight: 500 !important;
+    color: var(--text-secondary) !important;
+}
+
+[data-testid="stSidebarNav"] a:hover {
+    background-color: rgba(255, 255, 255, 0.03) !important;
+    color: var(--text-primary) !important;
+}
+
+[data-testid="stSidebarNav"] a span {
+    font-size: 0.95rem !important;
+}
+
+/* Active Nav Link */
+[data-testid="stSidebarNav"] a[aria-current="page"] {
+    background-color: rgba(99, 102, 241, 0.1) !important;
+    border-left: 3px solid var(--accent) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    border-radius: 4px 8px 8px 4px !important;
+}
+
 </style>
 """

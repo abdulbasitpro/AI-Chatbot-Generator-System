@@ -14,10 +14,15 @@ bot_id = st.session_state.get("selected_bot_id") or st.query_params.get("bot_id"
 bots = load_chatbots()
 bot = next((b for b in bots if b.get("id") == bot_id), None)
 
+# Auto-select the first available bot if they navigated directly to the Chat page
+if not bot and bots:
+    bot = bots[0]
+    st.session_state["selected_bot_id"] = bot["id"]
+
 if not bot:
-    st.warning("Chatbot not found or no bot selected. Please select a bot from the Dashboard.")
-    if st.button("Go to Dashboard", type="primary"):
-        st.switch_page("pages/1_Dashboard.py")
+    st.warning("You haven't built any chatbots yet! Let's create your first one.")
+    if st.button("Build a Chatbot", type="primary"):
+        st.switch_page("pages/2_Builder.py")
     st.stop()
 
 # Set up session state for chat
@@ -25,11 +30,13 @@ session_key = f"chat_messages_{bot['id']}"
 if session_key not in st.session_state:
     st.session_state[session_key] = [{"role": "assistant", "content": bot.get("greeting", "Hello!"), "avatar": bot.get("avatar", "🤖")}]
 
-if st.sidebar.button("Clear Chat History", use_container_width=True):
-    st.session_state[session_key] = [{"role": "assistant", "content": bot.get("greeting", "Hello!"), "avatar": bot.get("avatar", "🤖")}]
-    st.rerun()
-
-st.markdown(f"<h2>{bot.get('avatar', '🤖')} {bot.get('name', 'Chat')}</h2>", unsafe_allow_html=True)
+col1, col2 = st.columns([4, 1])
+with col1:
+    st.markdown(f"<h2 style='margin-top: 0;'>{bot.get('avatar', '🤖')} {bot.get('name', 'Chat')}</h2>", unsafe_allow_html=True)
+with col2:
+    if st.button("🧹 Clear Chat", use_container_width=True):
+        st.session_state[session_key] = [{"role": "assistant", "content": bot.get("greeting", "Hello!"), "avatar": bot.get("avatar", "🤖")}]
+        st.rerun()
 
 # Render existing messages
 for msg in st.session_state[session_key]:
