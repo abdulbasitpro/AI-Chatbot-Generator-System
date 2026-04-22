@@ -81,7 +81,16 @@ else:
                         bid       = bot["id"]
                         is_public = bot.get("is_public", False)
                         # Streamlit strips numeric prefix: pages/4_Embed.py → /Embed
-                        base_url  = "http://localhost:8503"
+                        # Dynamically detect base URL for deployment
+                        try:
+                            # st.context.headers is available in Streamlit 1.34+
+                            host = st.context.headers.get("host")
+                            # Detect if we are on HTTPS (standard for Streamlit Cloud)
+                            proto = st.context.headers.get("x-forwarded-proto", "http")
+                            base_url = f"{proto}://{host}" if host else "http://localhost:8501"
+                        except:
+                            base_url = "http://localhost:8501"
+
                         chat_url  = f"{base_url}/Embed?bot_id={bid}"
                         iframe_tag = f'<iframe src="{chat_url}" width="100%" height="600" frameborder="0" style="border-radius:12px;"></iframe>'
 
