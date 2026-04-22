@@ -1,15 +1,30 @@
+"""
+Public embed page — no authentication required for public bots.
+URL: http://localhost:8503/Embed?bot_id=<id>
+"""
 import streamlit as st
 import time
-from components.sidebar import render_sidebar
 from utils.storage import load_chatbots
+from utils.auth import get_user_api_key
 from utils.groq_client import stream_chat_response, get_available_models
-from utils.auth import is_logged_in, get_current_user, get_user_api_key
 from components.styles import get_saas_css
 
-st.set_page_config(page_title="Chat | AI Chatbot Generator", page_icon="💬", layout="wide")
+st.set_page_config(
+    page_title="Chat",
+    page_icon="💬",
+    layout="centered",
+    initial_sidebar_state="collapsed",
+)
+
 st.markdown(get_saas_css(), unsafe_allow_html=True)
 st.markdown("""
 <style>
+[data-testid="stSidebar"]        { display: none !important; }
+[data-testid="collapsedControl"] { display: none !important; }
+[data-testid="stHeader"]         { display: none !important; }
+footer                           { display: none !important; }
+.block-container { padding-top: 0.8rem !important; max-width: 780px !important; }
+
 /* Delete message button — always visible red button */
 .del-msg-btn {
     display: flex;
@@ -40,45 +55,37 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-if not is_logged_in(st.session_state):
-    st.switch_page("pages/0_Auth.py")
-
-render_sidebar()
-
-user    = get_current_user(st.session_state)
-api_key = get_user_api_key(user["id"])
-
-# ── Guard: must have API key ───────────────────────────────────────────────────
-if not api_key:
-    st.markdown("""
-<div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3);
-            border-radius:14px; padding:1.5rem; text-align:center; margin-top:2rem;">
-    <div style="font-size:2rem; margin-bottom:0.5rem;">🔑</div>
-    <h3 style="color:#F87171; margin:0 0 0.5rem 0;">No API Key Found</h3>
-    <p style="color:#94A3B8; font-size:0.9rem; margin:0;">
-        Add your Groq API key in the Builder before chatting.
-    </p>
-</div>
-""", unsafe_allow_html=True)
-    if st.button("Go to Builder →", type="primary", use_container_width=True):
-        st.switch_page("pages/2_Builder.py")
+# ── Resolve bot ────────────────────────────────────────────────────────────────
+bot_id = st.query_params.get("bot_id", None)
+if not bot_id:
+    st.error("No bot specified. Add ?bot_id=YOUR_BOT_ID to the URL.")
     st.stop()
 
-# ── Load bot ───────────────────────────────────────────────────────────────────
-bot_id = st.session_state.get("selected_bot_id") or st.query_params.get("bot_id", None)
-bots   = load_chatbots()
-bot    = next((b for b in bots if b.get("id") == bot_id), None)
-if not bot and bots:
-    bot = bots[0]
-    st.session_state["selected_bot_id"] = bot["id"]
+bots = load_chatbots()
+bot  = next((b for b in bots if b.get("id") == bot_id), None)
+
 if not bot:
-    st.warning("No chatbots found. Build one first!")
-    if st.button("Build a Chatbot", type="primary"):
-        st.switch_page("pages/2_Builder.py")
+    st.error("Bot not found. It may have been deleted.")
+    st.stop()
+
+if not bot.get("is_public", False):
+    st.markdown("""
+<div style="text-align:center; padding:4rem 2rem;">
+    <div style="font-size:3rem; margin-bottom:1rem;">🔒</div>
+    <h2 style="color:#F8FAFC;">This chatbot is private</h2>
+    <p style="color:#64748B;">The owner has not made this bot public.</p>
+</div>
+""", unsafe_allow_html=True)
+    st.stop()
+
+owner_id = bot.get("owner_id")
+api_key  = get_user_api_key(owner_id) if owner_id else None
+if not api_key:
+    st.error("This bot is not properly configured. The owner needs to add their API key.")
     st.stop()
 
 # ── Session init ───────────────────────────────────────────────────────────────
-session_key = f"chat_messages_{bot['id']}"
+session_key = f"embed_chat_{bot_id}"
 if session_key not in st.session_state:
     st.session_state[session_key] = [{
         "role":    "assistant",
@@ -86,16 +93,22 @@ if session_key not in st.session_state:
         "avatar":  bot.get("avatar", "🤖"),
     }]
 
-# ── Header row ─────────────────────────────────────────────────────────────────
-hdr, clr = st.columns([4, 1])
-with hdr:
-    st.markdown(
-        f"<h2 style='margin-top:0; font-family:var(--font);'>"
-        f"{bot.get('avatar','🤖')} {bot.get('name','Chat')}</h2>",
-        unsafe_allow_html=True,
-    )
-with clr:
-    if st.button("🧹 Clear Chat", use_container_width=True, help="Clear all messages"):
+# ── Header + Clear button ──────────────────────────────────────────────────────
+hdr_col, clr_col = st.columns([4, 1])
+with hdr_col:
+    st.markdown(f"""
+<div style="display:flex; align-items:center; gap:0.7rem; padding:0.5rem 0 0.8rem 0;
+            border-bottom:1px solid rgba(255,255,255,0.06); margin-bottom:0.8rem;">
+    <span style="font-size:1.8rem;">{bot.get('avatar','🤖')}</span>
+    <div>
+        <div style="font-size:1rem; font-weight:700; color:#F8FAFC;">{bot.get('name','Chatbot')}</div>
+        <div style="font-size:0.68rem; color:#475569;">Powered by AI Chatbot Generator</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+with clr_col:
+    st.markdown("<div style='padding-top:0.4rem'></div>", unsafe_allow_html=True)
+    if st.button("🧹 Clear", use_container_width=True, help="Clear all messages"):
         st.session_state[session_key] = [{
             "role":    "assistant",
             "content": bot.get("greeting", "Hello!"),
@@ -103,7 +116,7 @@ with clr:
         }]
         st.rerun()
 
-# ── Render messages with per-message delete button ─────────────────────────────
+# ── Render messages with per-message delete ────────────────────────────────────
 msgs = st.session_state[session_key]
 delete_idx = None
 
@@ -116,10 +129,10 @@ for idx, msg in enumerate(msgs):
                 st.markdown(f'<div class="chat-meta">{msg["meta"]}</div>',
                             unsafe_allow_html=True)
     with del_col:
-        # Never allow deleting the very first greeting message
+        # Don't allow deleting the very first greeting
         if idx > 0:
             st.markdown('<div class="del-msg-btn">', unsafe_allow_html=True)
-            if st.button("✕", key=f"chat_del_{idx}", help="Delete this message"):
+            if st.button("✕", key=f"embed_del_{idx}", help="Delete this message"):
                 delete_idx = idx
             st.markdown("</div>", unsafe_allow_html=True)
 
@@ -128,7 +141,7 @@ if delete_idx is not None:
     st.rerun()
 
 # ── Chat input ─────────────────────────────────────────────────────────────────
-user_input = st.chat_input(f"Message {bot.get('name', 'your bot')}…")
+user_input = st.chat_input(f"Message {bot.get('name','the bot')}…")
 
 if user_input:
     st.session_state[session_key].append({"role": "user", "content": user_input})
@@ -162,8 +175,4 @@ if user_input:
                 "meta":    meta_html,
             })
         except Exception as e:
-            err = str(e)
-            if "401" in err or "invalid_api_key" in err.lower():
-                st.error("❌ Invalid or expired Groq API key. Update it in the Builder.")
-            else:
-                st.error(f"❌ Error: {err[:200]}")
+            st.error(f"Error: {str(e)[:200]}")

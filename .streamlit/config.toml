@@ -1,0 +1,8 @@
+[server]
+# Allow iframing from any origin (needed for embed on external websites)
+enableXsrfProtection = false
+enableCORS = false
+headless = true
+
+[browser]
+gatherUsageStats = false

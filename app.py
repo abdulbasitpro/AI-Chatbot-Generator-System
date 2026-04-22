@@ -1,6 +1,12 @@
 import streamlit as st
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env
+load_dotenv()
+
 from components.styles import get_saas_css
-import streamlit.components.v1 as components
+from utils.auth import is_logged_in
 
 st.set_page_config(
     page_title="AI Chatbot Generator SaaS",
@@ -11,6 +17,10 @@ st.set_page_config(
 
 # Inject global SaaS CSS
 st.markdown(get_saas_css(), unsafe_allow_html=True)
+
+# ── Auth guard: must be logged in to see the landing page features ─────────────
+if not is_logged_in(st.session_state):
+    st.switch_page("pages/0_Auth.py")
 
 from components.sidebar import render_sidebar
 render_sidebar()

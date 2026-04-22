@@ -1,8 +1,11 @@
-# Environment Variables
+# Local Data & Secrets
 .env
-
-# Streamlit Secrets (Extremely Important!)
+.env.local
 .streamlit/secrets.toml
+
+# Data directory (Database files)
+data/*.json
+!data/.gitkeep
 
 # Python Cache
 __pycache__/
@@ -19,3 +22,6 @@ env/
 # IDEs
 .vscode/
 .idea/
+.DS_Store
+
+
